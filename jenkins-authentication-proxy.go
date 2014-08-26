@@ -6,17 +6,16 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-
-	flag "github.com/docker/docker/pkg/mflag"
+	"os"
 )
 
-var jenkins_address string
-var listen_address string
-
 func main() {
-	flag.StringVar(&jenkins_address, []string{"-jenkins", "j"}, "http://localhost:80", "The address Jenkins is running on")
-	flag.StringVar(&listen_address, []string{"-listen", "l"}, "[::]:8080", "The address to listen on")
-	flag.Parse()
+	jenkins_address := os.Getenv("JENKINS_URL")
+	listen_address := os.Getenv("LISTEN_ADDRESS")
+
+	if jenkins_address == "" || listen_address == "" {
+		log.Fatalln("Please specify the JENKINS_URL and LISTEN_ADDRESS environment variables")
+	}
 
 	remote, err := url.Parse(jenkins_address)
 	if err != nil {
