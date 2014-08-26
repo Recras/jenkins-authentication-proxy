@@ -13,8 +13,11 @@ func main() {
 	jenkins_address := os.Getenv("JENKINS_URL")
 	listen_address := os.Getenv("LISTEN_ADDRESS")
 
-	if jenkins_address == "" || listen_address == "" {
-		log.Fatalln("Please specify the JENKINS_URL and LISTEN_ADDRESS environment variables")
+	if listen_address == "" {
+		listen_address = "[::]:8080"
+	}
+	if jenkins_address == "" {
+		log.Fatalln("Use environment variables JENKINS_URL and LISTEN_ADDRESS (default \"[::]:8080\")")
 	}
 
 	remote, err := url.Parse(jenkins_address)
