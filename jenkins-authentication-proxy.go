@@ -14,8 +14,8 @@ var jenkins_address string
 var listen_address string
 
 func main() {
-	flag.StringVar(&jenkins_address, []string{"-jenkins", "j"}, "http://localhost:8080", "The address Jenkins is running on")
-	flag.StringVar(&listen_address, []string{"-listen", "l"}, "[::]:80", "The address to listen on")
+	flag.StringVar(&jenkins_address, []string{"-jenkins", "j"}, "http://localhost:80", "The address Jenkins is running on")
+	flag.StringVar(&listen_address, []string{"-listen", "l"}, "[::]:8080", "The address to listen on")
 	flag.Parse()
 
 	remote, err := url.Parse(jenkins_address)
