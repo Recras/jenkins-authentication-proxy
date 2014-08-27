@@ -7,7 +7,17 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"strings"
 )
+
+var openPrefixes = []string{
+	"/git",
+	"/buildByToken",
+	"/cli",
+	"/jnlpJars",
+	"/subversion",
+	"/whoAmI",
+}
 
 const planio_url = "https://recras.plan.io/users/current.json"
 
@@ -42,6 +52,13 @@ func handler(fw *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request)
 		var err error
 		var resp *http.Response
 		client := http.Client{}
+
+		for _, prefix := range openPrefixes {
+			if strings.HasPrefix(req.RequestURI, prefix) {
+				fw.ServeHTTP(wr, req)
+				return
+			}
+		}
 
 		r, err = http.NewRequest("GET", planio_url, nil)
 		if err != nil {
