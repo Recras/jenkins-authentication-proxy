@@ -9,6 +9,8 @@ import (
 	"os"
 )
 
+const planio_url = "https://recras.plan.io/users/current.json"
+
 func main() {
 	jenkins_address := os.Getenv("JENKINS_URL")
 	listen_address := os.Getenv("LISTEN_ADDRESS")
@@ -41,8 +43,7 @@ func handler(fw *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request)
 		var resp *http.Response
 		client := &http.Client{}
 
-		url := "https://recras.plan.io/users/current.json"
-		r, err = http.NewRequest("GET", url, nil)
+		r, err = http.NewRequest("GET", planio_url, nil)
 		if err != nil {
 			wr.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprint(wr, "error", err)
