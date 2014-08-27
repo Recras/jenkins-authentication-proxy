@@ -46,19 +46,27 @@ func main() {
 	}
 }
 
+func isOpenPrefix(requestURI string) bool {
+	for _, prefix := range openPrefixes {
+		if strings.HasPrefix(requestURI, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
 func handler(fw *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) {
 	return func(wr http.ResponseWriter, req *http.Request) {
 		var r *http.Request
 		var err error
 		var resp *http.Response
-		client := http.Client{}
 
-		for _, prefix := range openPrefixes {
-			if strings.HasPrefix(req.RequestURI, prefix) {
-				fw.ServeHTTP(wr, req)
-				return
-			}
+		if isOpenPrefix(req.RequestURI) {
+			fw.ServeHTTP(wr, req)
+			return
 		}
+
+		client := http.Client{}
 
 		r, err = http.NewRequest("GET", planio_url, nil)
 		if err != nil {
