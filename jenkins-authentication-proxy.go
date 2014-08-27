@@ -19,6 +19,7 @@ var openPrefixes = []string{
 	"/whoAmI",
 }
 
+const version = "1.0"
 const planio_url = "https://recras.plan.io/users/current.json"
 
 func main() {
@@ -78,6 +79,7 @@ func authenticateWithBackend(req *http.Request) (bool, error) {
 
 func handler(fw *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) {
 	return func(wr http.ResponseWriter, req *http.Request) {
+		wr.Header()["X-Powered-By"] = []string{"jenkins-authentication-proxy/" + version}
 		if isOpenPrefix(req.RequestURI) {
 			fw.ServeHTTP(wr, req)
 			return
