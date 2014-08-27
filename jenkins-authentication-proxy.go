@@ -55,40 +55,42 @@ func isOpenPrefix(requestURI string) bool {
 	return false
 }
 
+func authenticateWithBackend(req *http.Request) (bool, error) {
+	var r *http.Request
+	var err error
+	var resp *http.Response
+
+	r, err = http.NewRequest("GET", planio_url, nil)
+	if err != nil {
+		return false, err
+	}
+	r.Header["Authorization"] = req.Header["Authorization"]
+
+	client := http.Client{}
+	resp, err = client.Do(r)
+	if err != nil {
+		return false, err
+	}
+
+	resp.Body.Close()
+	return resp.StatusCode == 200, nil
+}
+
 func handler(fw *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) {
 	return func(wr http.ResponseWriter, req *http.Request) {
-		var r *http.Request
-		var err error
-		var resp *http.Response
-
 		if isOpenPrefix(req.RequestURI) {
 			fw.ServeHTTP(wr, req)
 			return
 		}
 
-		client := http.Client{}
-
-		r, err = http.NewRequest("GET", planio_url, nil)
-		if err != nil {
+		if authed, err := authenticateWithBackend(req); err != nil {
 			wr.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprint(wr, "error", err)
-			return
-		}
-		r.Header["Authorization"] = req.Header["Authorization"]
-
-		resp, err = client.Do(r)
-		if err != nil {
-			wr.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(wr, "error", err)
-			return
-		}
-
-		if resp.StatusCode == 200 {
-			resp.Body.Close()
+			log.Print(err)
+		} else if authed {
 			fw.ServeHTTP(wr, req)
-			return
 		} else {
-			wr.Header()["Www-Authenticate"] = resp.Header["Www-Authenticate"]
+			wr.Header()["Www-Authenticate"] = []string{"Basic realm=\"Jenkins\""}
 			wr.WriteHeader(http.StatusUnauthorized)
 		}
 	}
