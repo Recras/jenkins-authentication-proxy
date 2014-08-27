@@ -41,7 +41,7 @@ func handler(fw *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request)
 		var r *http.Request
 		var err error
 		var resp *http.Response
-		client := &http.Client{}
+		client := http.Client{}
 
 		r, err = http.NewRequest("GET", planio_url, nil)
 		if err != nil {
