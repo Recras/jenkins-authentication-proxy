@@ -44,6 +44,8 @@ func main() {
 	proxy := httputil.NewSingleHostReverseProxy(remote)
 	http.HandleFunc("/", handler(proxy))
 
+	log.Println("jenkins-authentication-proxy", version, "starting")
+	log.Println("Authentication endpoint:", planio_url)
 	err = http.ListenAndServe(listen_address, nil)
 	if err != nil {
 		log.Panic(err)
