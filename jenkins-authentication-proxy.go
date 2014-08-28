@@ -20,7 +20,7 @@ var openPrefixes = []string{
 	"/whoAmI",
 }
 
-const version = "1.0"
+const version = "1.1"
 const planio_url = "https://recras.plan.io/users/current.json"
 
 var authCache = map[string]time.Time{}
