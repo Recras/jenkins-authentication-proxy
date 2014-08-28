@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 )
 
 var openPrefixes = []string{
@@ -21,6 +22,8 @@ var openPrefixes = []string{
 
 const version = "1.0"
 const planio_url = "https://recras.plan.io/users/current.json"
+
+var authCache = map[string]time.Time{}
 
 func main() {
 	jenkins_address := os.Getenv("JENKINS_URL")
@@ -56,7 +59,29 @@ func isOpenPrefix(requestURI string) bool {
 	return false
 }
 
+func isCached(authorization string) bool {
+	const cacheTime = time.Duration(5) * time.Minute
+
+	if t, ok := authCache[authorization]; ok {
+		if time.Now().Before(t.Add(cacheTime)) {
+			return true
+		}
+		log.Print("cache expired:", authorization)
+		delete(authCache, authorization)
+	}
+	return false
+}
+
+func addToCache(authorization string) {
+	authCache[authorization] = time.Now()
+	log.Print("added to cache:", authorization)
+}
+
 func authenticateWithBackend(req *http.Request) (bool, error) {
+	if isCached(req.Header["Authorization"][0]) {
+		return true, nil
+	}
+
 	var r *http.Request
 	var err error
 	var resp *http.Response
@@ -74,7 +99,11 @@ func authenticateWithBackend(req *http.Request) (bool, error) {
 	}
 
 	resp.Body.Close()
-	return resp.StatusCode == 200, nil
+	if resp.StatusCode == 200 {
+		addToCache(req.Header["Authorization"][0])
+		return true, nil
+	}
+	return false, nil
 }
 
 func handler(fw *httputil.ReverseProxy) func(http.ResponseWriter, *http.Request) {
