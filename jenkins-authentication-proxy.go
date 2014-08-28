@@ -80,7 +80,8 @@ func addToCache(authorization string) {
 }
 
 func authenticateWithBackend(req *http.Request) (bool, error) {
-	if isCached(req.Header["Authorization"][0]) {
+	auth, authExists := req.Header["Authorization"]
+	if authExists && isCached(auth[0]) {
 		return true, nil
 	}
 
@@ -92,7 +93,7 @@ func authenticateWithBackend(req *http.Request) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	r.Header["Authorization"] = req.Header["Authorization"]
+	r.Header["Authorization"] = auth
 
 	client := http.Client{}
 	resp, err = client.Do(r)
@@ -102,7 +103,9 @@ func authenticateWithBackend(req *http.Request) (bool, error) {
 
 	resp.Body.Close()
 	if resp.StatusCode == 200 {
-		addToCache(req.Header["Authorization"][0])
+		if authExists {
+			addToCache(auth[0])
+		}
 		return true, nil
 	}
 	return false, nil
